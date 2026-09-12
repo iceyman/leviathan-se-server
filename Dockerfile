@@ -36,7 +36,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN mkdir -p /home/steam/steamcmd && \
     wget -qO- "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar -xz -C /home/steam/steamcmd
 
-RUN id -u steam &>/dev/null || (groupadd -g 1000 steam && useradd -u 1000 -g 1000 -m steam)
+# Robust user creation — the base image may already have a non-root
+# user at UID 1000 (confirmed from earlier logs tonight showing a
+# pre-existing "wineuser" in this same image family). Rather than a
+# fragile conditional that can silently fail to actually create the
+# user (confirmed via a real failed build — the check step reported
+# success but "steam" didn't actually exist afterward), this explicitly
+# creates a group only if GID 1000 is free, then creates the steam user
+# regardless of what UID it lands on, and prints the result so failures
+# are visible rather than silent.
+RUN set -e; \
+    if ! getent group 1000 >/dev/null; then groupadd -g 1000 steam; else groupadd steam; fi; \
+    if ! id -u steam >/dev/null 2>&1; then useradd -g steam -m -s /bin/bash steam; fi; \
+    id steam
+
 RUN mkdir -p /home/steam && chown -R steam:steam /home/steam
 
 COPY winetricks.sh /home/steam/winetricks.sh
