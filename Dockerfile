@@ -60,17 +60,15 @@ RUN chmod +x /home/steam/winetricks.sh /home/steam/entrypoint.sh && chown steam:
 # into the image at build time instead of doing it on every first boot —
 # confirmed this is what sknnr's original image's own unusually large
 # "mkdir" layer was actually doing (773MB for a plain mkdir is not
-# normal). Baked at a build-time-only path outside the volume mount, then
-# the entrypoint copies it into the real persistent WINEPREFIX location
-# if missing there — same /opt-vs-volume-mount pattern used for other
-# custom images tonight, avoiding the volume mount silently hiding
-# baked-in files (a real bug caught earlier this session with a
-# different game).
-ENV WINEPREFIX=/opt/.space_engineers_prefix_baked
+# normal). Baked inside /home/steam (already correctly owned by steam at
+# this point in the build) rather than /opt — a real build failure
+# caught this: /opt is root-owned, and Wine's own ownership check
+# refuses to create a config directory under a path it doesn't own, same
+# class of issue fixed earlier tonight for the plain-Wine attempt, just
+# in a different location this time.
+ENV WINEPREFIX=/home/steam/.space_engineers_prefix_baked
 USER steam
 RUN /home/steam/winetricks.sh
-
-RUN mkdir -p "$SE_PATH"
 
 WORKDIR /home/steam
 ENTRYPOINT ["/home/steam/entrypoint.sh"]

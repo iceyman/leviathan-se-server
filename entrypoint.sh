@@ -13,7 +13,7 @@ export WINEPREFIX="/home/container/.space_engineers_prefix"
 if [ ! -d "$WINEPREFIX" ] || [ -z "$(ls -A "$WINEPREFIX" 2>/dev/null)" ]; then
     echo "INFO: Copying baked Wine prefix into persistent volume (first run)..."
     mkdir -p "$WINEPREFIX"
-    cp -a /opt/.space_engineers_prefix_baked/. "$WINEPREFIX/"
+    cp -a /home/steam/.space_engineers_prefix_baked/. "$WINEPREFIX/"
 fi
 
 # Based on sknnr/space-engineers-dedicated-server's own entrypoint.sh,
