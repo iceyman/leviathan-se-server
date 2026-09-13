@@ -54,7 +54,8 @@ RUN mkdir -p /home/steam && chown -R steam:steam /home/steam
 
 COPY winetricks.sh /home/steam/winetricks.sh
 COPY entrypoint.sh /home/steam/entrypoint.sh
-RUN chmod +x /home/steam/winetricks.sh /home/steam/entrypoint.sh && chown steam:steam /home/steam/*.sh
+COPY default-world.zip /home/steam/default-world.zip
+RUN chmod +x /home/steam/winetricks.sh /home/steam/entrypoint.sh && chown steam:steam /home/steam/*.sh /home/steam/default-world.zip
 
 # Bake the fully-configured Wine prefix (.NET, corefonts, vcrun2019, etc)
 # into the image at build time instead of doing it on every first boot —

@@ -27,10 +27,12 @@ fi
 #
 # 2. The original required a pre-made world to already exist (checks for
 #    SpaceEngineers-Dedicated.cfg and exits immediately if missing, before
-#    ever reaching the steamcmd download step). Added automatic default
-#    world creation via the game's own --create-world-if-missing-style
-#    flow instead, matching how the rest of this panel's blueprints work
-#    (auto-generate on first run rather than requiring a manual upload).
+#    ever reaching the steamcmd download step). Confirmed via a real test
+#    run and the game's own official docs that Space Engineers' dedicated
+#    server tool genuinely cannot create a new world via command line at
+#    all — so instead of just exiting with an error, this now extracts a
+#    real, known-good default world baked into the image (sourced from
+#    another confirmed-working community project's own template).
 
 echo "INFO: Installing/updating Space Engineers via steamcmd..."
 /home/steam/steamcmd/steamcmd.sh +@sSteamCmdForcePlatformType windows +force_install_dir "$SE_PATH" +login anonymous +app_update 298740 validate +quit
@@ -67,16 +69,21 @@ fi
 export WINEDEBUG=-all
 
 # If no world config exists yet (no WORLD_ZIP_URL was given, and this is
-# a genuinely fresh volume), generate a real default world by actually
-# launching the server once with no existing save — Space Engineers
-# itself creates a default world + config on first boot when none exists,
-# same as it would on a normal Windows install. This replaces the
-# original script's "just exit with an error" behavior.
+# a genuinely fresh volume), extract a baked-in default world instead of
+# trying to generate one — confirmed via a real test run that Space
+# Engineers' dedicated server tool cannot create a new world via command
+# line at all, this is a genuine limitation of the game itself.
 if ! [ -f "${SE_PATH}/world/SpaceEngineers-Dedicated.cfg" ]; then
-    echo "INFO: No existing world found — generating a default world (first boot only)..."
-    mkdir -p "${SE_PATH}/world"
-    timeout 90 wine "${SE_PATH}/DedicatedServer64/SpaceEngineersDedicated.exe" -noconsole -ignorelastsession -path "Z:\\${SE_PATH_WIN}\\world" || true
-    echo "INFO: Default world generation attempt finished."
+    echo "INFO: No existing world found — extracting the baked-in default world (first boot only)..."
+    # Confirmed via a real test run AND the game's own official docs that
+    # Space Engineers' dedicated server tool genuinely cannot generate a
+    # new world via command line at all — it requires a pre-made world to
+    # already exist. This extracts a real, known-good default world
+    # (originally sourced from another confirmed-working community
+    # project's own baked template) rather than trying to generate one.
+    mkdir -p "${SE_PATH}"
+    unzip -o -q /home/steam/default-world.zip -d "${SE_PATH}"
+    echo "INFO: Default world extracted."
 fi
 
 if ! [ -f "${SE_PATH}/world/SpaceEngineers-Dedicated.cfg" ]; then
