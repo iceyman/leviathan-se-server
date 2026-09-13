@@ -117,6 +117,19 @@ echo "INFO: Updating SpaceEngineers-Dedicated.cfg"
 sed -i "s=<IP>.*</IP>=<IP>$(hostname -I)</IP>=g" "$CONFIG_PATH"
 sed -E -i "s=<LoadWorld />|<LoadWorld.*LoadWorld>=<LoadWorld>${LOAD_WORLD_PATH}</LoadWorld>=g" "$CONFIG_PATH"
 
+# FIX: the baked default-world template (sourced from another community
+# project) shipped with a literal, non-functional placeholder value here
+# ("technicallythisisbase64" — not actually valid base64), confirmed
+# directly from a real crash: "Invalid ServerPasswordSalt ... Invalid
+# length for a Base-64 char array". Generates a genuine, unique random
+# salt on first boot only — checked so it doesn't get regenerated (and
+# invalidate anything relying on it) on every subsequent restart.
+if grep -q "technicallythisisbase64" "$CONFIG_PATH"; then
+    NEW_SALT="$(openssl rand -base64 32 | tr -d '\n')"
+    sed -i "s|<ServerPasswordSalt>.*</ServerPasswordSalt>|<ServerPasswordSalt>${NEW_SALT}</ServerPasswordSalt>|g" "$CONFIG_PATH"
+    echo "INFO: Generated a real ServerPasswordSalt (was a non-functional placeholder)."
+fi
+
 # FIX: was hardcoded to /home/steam/space-engineers regardless of $SE_PATH
 rm -rf "${SE_PATH}/world/Saves"/*.log 2>/dev/null || true
 

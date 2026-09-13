@@ -28,7 +28,7 @@ ENV SE_PATH=/home/container/space-engineers
 ENV WINEARCH=win64
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget curl unzip ca-certificates \
+    wget curl unzip ca-certificates openssl \
     && rm -rf /var/lib/apt/lists/*
 
 # steamcmd — needed for the actual game file download, confirmed from the
